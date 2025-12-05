@@ -62,5 +62,5 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
   }
 
   console.clear();
-  stdout.write("\x1b[H" + lines.join("\n"));
+  stdout.write("\x1b[H" + lines.join("\n") + "\n");
 }

@@ -1,11 +1,12 @@
 import { $ } from "bun";
+import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 export async function compile(address: string) {
   const tmpPath = join(tmpdir(), `${address}.elf`);
-  await $`riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -nostdlib -o ${tmpPath} ${address}`;
-  const result =
-    await $`riscv64-unknown-elf-objdump -d ${tmpPath} | awk '/^[[:space:]]*[0-9a-f]+:/ { print $2 }'`.text();
-  return result.replaceAll("\n", "");
+  const hexPath = tmpPath.replace(/elf$/, "hex");
+  await $`riscv64-unknown-elf-g++ -march=rv32i -mabi=ilp32 -nostartfiles start.s ${address} -o ${tmpPath}`;
+  await $`riscv64-unknown-elf-objcopy -O verilog ${tmpPath} ${hexPath}`;
+  return (await readFile(hexPath)).toString();
 }
