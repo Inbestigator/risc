@@ -1,28 +1,34 @@
 #include "io.cpp"
 
-// arrow keys
-#define UP 0x415B1B
-#define DOWN 0x425B1B
-#define LEFT 0x445B1B
-#define RIGHT 0x435B1B
+#define UP 'w'
+#define DOWN 's'
+#define LEFT 'a'
+#define RIGHT 'd'
 
 #define SNAKE 15
 #define APPLE 196
+#define MAX_SNAKE_LENGTH (WIDTH * HEIGHT)
 
 uint32_t rng = 1;
 int rand(int max)
 {
-    // rng ^= rng << 13;
-    // rng ^= rng >> 17;
-    // rng ^= rng << 5;
     return rng++ % max;
 }
+
+struct Node
+{
+    int x, y;
+};
 
 int main()
 {
     int x = WIDTH / 2, y = HEIGHT / 2;
     int dx = 0, dy = 0;
     int ax = rand(WIDTH), ay = rand(HEIGHT);
+
+    Node snake[MAX_SNAKE_LENGTH];
+    int snake_length = 1;
+    snake[0] = {x, y};
 
     int n = -1;
 
@@ -32,7 +38,8 @@ int main()
         if (n % 500 != 0)
             continue;
         n = 0;
-        pos(x, y) = SNAKE;
+
+        pos(snake[snake_length - 1].x, snake[snake_length - 1].y) = SNAKE;
         pos(ax, ay) = APPLE;
 
         render_frame();
@@ -60,18 +67,29 @@ int main()
         }
         input[0] = 0;
 
-        pos(x, y) = EMPTY;
-
         x = (x + dx + WIDTH) % WIDTH;
         y = (y + dy + HEIGHT) % HEIGHT;
 
-        if (pos(x, y) == SNAKE && (dx != 0 || dy != 0))
+        if (pos(x, y) == SNAKE && snake_length > 1)
         {
             return 1;
         }
 
+        pos(snake[0].x, snake[0].y) = EMPTY;
+
+        for (int i = 0; i < snake_length - 1; ++i)
+        {
+            snake[i] = snake[i + 1];
+        }
+
+        snake[snake_length - 1] = {x, y};
+
         if (x == ax && y == ay)
         {
+            if (snake_length < MAX_SNAKE_LENGTH)
+            {
+                snake[snake_length++] = {x, y};
+            }
             do
             {
                 ax = rand(WIDTH);

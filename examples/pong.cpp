@@ -10,6 +10,8 @@
 
 #define PADDLE_HEIGHT 2
 
+#define PLAY_WIDTH (WIDTH - 1)
+
 int n = -1;
 
 int main()
@@ -30,7 +32,12 @@ int main()
         for (int i = 0; i < PADDLE_HEIGHT; ++i)
         {
             pos(0, p1y + i) = PADDLE;
-            pos(WIDTH - 1, p2y + i) = PADDLE;
+            pos(PLAY_WIDTH - 1, p2y + i) = PADDLE;
+        }
+
+        for (int i = 0; i < HEIGHT; i += 2)
+        {
+            pos(PLAY_WIDTH / 2, i) = PADDLE;
         }
 
         render_frame();
@@ -39,7 +46,7 @@ int main()
         for (int i = 0; i < PADDLE_HEIGHT; ++i)
         {
             pos(0, p1y + i) = EMPTY;
-            pos(WIDTH - 1, p2y + i) = EMPTY;
+            pos(PLAY_WIDTH - 1, p2y + i) = EMPTY;
         }
 
         switch (key)
@@ -59,11 +66,11 @@ int main()
         }
         input[0] = 0;
 
-        if ((bx + dbx < 1 && (p1y - by) < 1 && (p1y - by) > -PADDLE_HEIGHT) || (bx + dbx > WIDTH - 2 && (p2y - by) < 1 && (p2y - by) > -PADDLE_HEIGHT))
+        if ((bx + dbx < 1 && (p1y - by) < 1 && (p1y - by) > -PADDLE_HEIGHT) || (bx + dbx > PLAY_WIDTH - 2 && (p2y - by) < 1 && (p2y - by) > -PADDLE_HEIGHT))
         {
             dbx *= -1;
         }
-        else if (bx + dbx < 1 || bx + dbx > WIDTH - 2)
+        else if (bx + dbx < 1 || bx + dbx > PLAY_WIDTH - 2)
         {
             return 1;
         }
