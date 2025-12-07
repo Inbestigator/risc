@@ -98,7 +98,7 @@ function loadVerilogHex(hex: string) {
 
 const trace: { instruction: string; code: string }[] = [];
 
-const TARGET_HZ = 1_000_000;
+process.on("exit", () => stdout.write("\x1b[?25h"));
 
 export function run(strings: TemplateStringsArray | string | string[], callback?: () => void) {
   loadVerilogHex(strings.toString().replaceAll(",", ""));
@@ -108,10 +108,7 @@ export function run(strings: TemplateStringsArray | string | string[], callback?
   stdout.write("\x1b[?25l");
 
   process.stdin.on("data", (data) => {
-    if (data.length === 1 && data[0] === 0x03) {
-      stdout.write("\x1b[?25h");
-      process.exit();
-    }
+    if (data.length === 1 && data[0] === 0x03) process.exit();
     memView.setUint32(0x00ffff, data.readUIntLE(0, Math.min(data.length, 4)), true);
   });
 
@@ -145,21 +142,8 @@ export function run(strings: TemplateStringsArray | string | string[], callback?
       }
       process.exit(1);
     }
+    setImmediate(step);
   }
 
-  let last = process.hrtime.bigint();
-
-  function cycle() {
-    const now = process.hrtime.bigint();
-    const dt = now - last;
-
-    if (dt >= 1e9 / TARGET_HZ) {
-      last = now;
-      step();
-    }
-
-    setImmediate(cycle);
-  }
-
-  setImmediate(cycle);
+  step();
 }

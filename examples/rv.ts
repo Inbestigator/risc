@@ -25,4 +25,6 @@ switch (argv[2]) {
     run(compiled);
     console.clear();
     break;
+  case "hl":
+    run(compiled);
 }

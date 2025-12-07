@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "io.cpp"
 
 int main()
@@ -10,12 +9,11 @@ int main()
     {
         output[i] = 15;
         render_frame();
+        if (i > WIDTH * HEIGHT - 1)
+            break;
         if (input[0] < '0' || input[0] > '9')
-        {
             continue;
-        }
-        output[i] = palette[input[0] - '0'];
-        ++i;
+        output[i++] = palette[input[0] - '0'];
         input[0] = 0;
     }
 
