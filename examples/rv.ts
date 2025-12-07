@@ -10,6 +10,7 @@ globalThis.ecall = { 1000() {} };
 
 switch (argv[2]) {
   case "stats":
+    console.clear();
     run(compiled, displayStats);
     break;
   case "screen":
@@ -22,8 +23,8 @@ switch (argv[2]) {
       }
       stdout.write("\x1b[0m");
     };
-    run(compiled);
     console.clear();
+    run(compiled);
     break;
   case "hl":
     run(compiled);

@@ -1,17 +1,21 @@
 import { stdout } from "bun";
 import { memory as defaultMem, X as defaultRegs } from "./data";
 
+let maxRegValueWidth = 5;
+
 export function displayStats(memory = defaultMem, registers: Record<string, number> = defaultRegs) {
   const termWidth = process.stdout.columns || 80;
   const termHeight = process.stdout.rows || 24;
 
   const regNames = Object.keys(registers) as (keyof typeof registers)[];
 
-  const maxRegNameWidth = Math.max(5, ...regNames.map((r) => r.length));
-  const maxRegValueWidth = Math.max(6, ...regNames.map((r) => registers[r]!.toString(16).length));
-  const regWidth = maxRegNameWidth + maxRegValueWidth;
+  maxRegValueWidth = Math.max(
+    maxRegValueWidth,
+    ...regNames.map((r) => registers[r]!.toString(16).length)
+  );
+  const regWidth = 4 + 1 + maxRegValueWidth;
 
-  const brailleWidth = Math.floor(termWidth - regWidth - 2);
+  const brailleWidth = termWidth - regWidth - 2;
   const memoryBytesPerRow = brailleWidth * 8;
   const totalRows = termHeight - 1;
 
@@ -20,15 +24,13 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
   const lines: string[] = [];
 
   lines.push(
-    `\x1b[4m${"Reg ".padEnd(maxRegNameWidth)}${"| Val ".padStart(
-      maxRegValueWidth + 1
-    )}│${" Memory".padEnd(brailleWidth)}\x1b[0m`
+    `\x1b[4mReg |${" Val ".padStart(maxRegValueWidth)}│${" Memory".padEnd(brailleWidth + 1)}\x1b[0m`
   );
 
   for (let row = 0; row < totalRows; ++row) {
     const regName = regNames[row];
     const regText = regName
-      ? regName.padEnd(maxRegNameWidth) +
+      ? regName.padEnd(4) +
         registers[regName]!.toString(16).padStart(maxRegValueWidth).toUpperCase()
       : " ".repeat(regWidth);
 
@@ -58,9 +60,8 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
         .join(" ");
     }
 
-    lines.push(`${regText} │${memoryColumn}`);
+    lines.push(`${regText} │ ${memoryColumn}`);
   }
 
-  console.clear();
-  stdout.write("\x1b[H" + lines.join("\n") + "\n");
+  stdout.write("\x1b[H" + lines.join("\n"));
 }
