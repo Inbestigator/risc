@@ -15,7 +15,7 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
   const memoryBytesPerRow = brailleWidth * 8;
   const totalRows = termHeight - 1;
 
-  const brailleRows = termHeight / 2;
+  const brailleRows = Math.floor(termHeight / 2);
 
   const lines: string[] = [];
 
@@ -50,7 +50,7 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
       }
       memoryColumn = braille.join("");
     } else {
-      const bytesPerHexRow = Math.floor(brailleWidth / 3);
+      const bytesPerHexRow = Math.floor(Math.floor(brailleWidth / 3) / 4) * 4;
       const memAddr = 0xa00 + (row - brailleRows) * bytesPerHexRow;
       const bytes = memory.slice(memAddr, memAddr + bytesPerHexRow);
       memoryColumn = Array.from(bytes)

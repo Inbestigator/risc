@@ -39,7 +39,7 @@ export const is = [
   i({ ...codes.auipc, execute: ({ imm, xd }) => (X[xd] = pc + signed(imm)) }),
   i({
     ...codes.jal,
-    execute: ({ imm, xd }) => {
+    execute({ imm, xd }) {
       const returnAddr = pc + 4;
       jumpHalfword(pc + signed(imm));
       X[xd] = returnAddr;
@@ -47,7 +47,7 @@ export const is = [
   }),
   i({
     ...codes.jalr,
-    execute: ({ imm, xd, xs1 }) => {
+    execute({ imm, xd, xs1 }) {
       const returnAddr = pc + 4;
       jump((X[xs1] + signed(imm)) & ~1);
       X[xd] = returnAddr;
@@ -120,10 +120,7 @@ export const is = [
   i({ ...codes.xori, execute: ({ imm, xd, xs1 }) => (X[xd] = X[xs1] ^ signed(imm)) }),
   i({ ...codes.ori, execute: ({ imm, xd, xs1 }) => (X[xd] = X[xs1] | signed(imm)) }),
   i({ ...codes.andi, execute: ({ imm, xd, xs1 }) => (X[xd] = X[xs1] & signed(imm)) }),
-  i({
-    ...codes.slli,
-    execute: ({ imm, xd, xs1 }) => (X[xd] = X[xs1] << (imm & 0xf)),
-  }),
+  i({ ...codes.slli, execute: ({ imm, xd, xs1 }) => (X[xd] = X[xs1] << (imm & 0xf)) }),
   i({ ...codes.srli, execute: ({ imm, xd, xs1 }) => (X[xd] = X[xs1] >> (imm & 0xf)) }),
   i({ ...codes.srai, execute: ({ imm, xd, xs1 }) => (X[xd] = X[xs1] >>> (imm & 0xf)) }),
   i({ ...codes.add, execute: ({ xd, xs1, xs2 }) => (X[xd] = X[xs1] + X[xs2]) }),
@@ -134,10 +131,7 @@ export const is = [
     execute: ({ xd, xs1, xs2 }) => (X[xd] = signed.X(xs1) < signed.X(xs2) ? 1 : 0),
   }),
   i({ ...codes.sltu, execute: ({ xd, xs1, xs2 }) => (X[xd] = X[xs1] < X[xs2] ? 1 : 0) }),
-  i({
-    ...codes.xor,
-    execute: ({ xd, xs1, xs2 }) => (X[xd] = X[xs1] ^ X[xs2]),
-  }),
+  i({ ...codes.xor, execute: ({ xd, xs1, xs2 }) => (X[xd] = X[xs1] ^ X[xs2]) }),
   i({ ...codes.srl, execute: ({ xd, xs1, xs2 }) => (X[xd] = X[xs1] >> (X[xs2] & 0xf)) }),
   i({ ...codes.sra, execute: ({ xd, xs1, xs2 }) => (X[xd] = X[xs1] >>> (X[xs2] & 0xf)) }),
   i({ ...codes.or, execute: ({ xd, xs1, xs2 }) => (X[xd] = X[xs1] | X[xs2]) }),
@@ -147,7 +141,7 @@ export const is = [
       const sys = X[17];
       if (globalThis.ecall[sys]) globalThis.ecall[sys]();
       else if (sys === 93) {
-        console.log(`Program exited with code ${X[10]}`);
+        console.info(`Program exited with code ${X[10]}`);
         throw "ProgramExit";
       } else throw `Unknown ECALL: ${sys}`;
     },
