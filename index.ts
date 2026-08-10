@@ -1,7 +1,7 @@
 import { emitKeypressEvents } from "node:readline";
+import { stdout } from "bun";
 import { memView, pc, setPC } from "./data";
 import { is } from "./instruction-set";
-import { stdout } from "bun";
 
 type EncodedVar = `${number}` | `${number}:${number}`;
 
@@ -15,28 +15,16 @@ export type EncodingType = keyof typeof encodings;
 export const encodings = {
   R: { xd, xs1, xs2 },
   I: { imm: "31:20", xd, xs1 },
-  S: {
-    imm: { bits: ["31:25", "11:7"], shift: 0 },
-    xs1,
-    xs2,
-  },
-  B: {
-    imm: { bits: ["31", "7", "30:25", "11:8"], shift: 1 },
-    xs1,
-    xs2,
-  },
-  U: {
-    imm: { bits: ["31:12"], shift: 12 },
-    xd,
-  },
+  S: { imm: { bits: ["31:25", "11:7"], shift: 0 }, xs1, xs2 },
+  B: { imm: { bits: ["31", "7", "30:25", "11:8"], shift: 1 }, xs1, xs2 },
+  U: { imm: { bits: ["31:12"], shift: 12 }, xd },
   J: { imm: { bits: ["31", "19:12", "20", "30:21"], shift: 1 }, xd },
 } satisfies Record<string, Encoding>;
 
-function decode(binary: string, encoded: EncodedVar) {
-  return encoded.includes(":")
+const decode = (binary: string, encoded: EncodedVar) =>
+  encoded.includes(":")
     ? binary.slice(...encoded.split(":").map((v, i) => 31 * (1 - i) - Number(v)))
-    : binary[31 - Number(encoded)]!;
-}
+    : (binary[31 - Number(encoded)] as string);
 
 function parse(instrNum: number) {
   const binary = instrNum.toString(2).padStart(32, "0");
@@ -46,22 +34,18 @@ function parse(instrNum: number) {
       i.opcode === opcode &&
       (!i.funct3 || (i.funct3 && i.funct3 === decode(binary, "14:12"))) &&
       (!i.funct7 || (i.funct7 && i.funct7 === decode(binary, "31:25"))) &&
-      (!i.funct12 || (i.funct12 && i.funct12 === decode(binary, "31:20")))
+      (!i.funct12 || (i.funct12 && i.funct12 === decode(binary, "31:20"))),
   );
   if (!instruction) throw `Unknown instruction: ${instrNum.toString(16).padStart(8, "0")}`;
-  const vars = Object.entries(encodings[instruction.type]).map(
-    ([k, v]: [string, Encoding[string]]) => {
-      if (typeof v === "string") {
-        return [k, decode(binary, v)] as const;
-      }
-      return [k, v.bits.map((b) => decode(binary, b)).join("") + "0".repeat(v.shift)] as const;
+  const vars = Object.entries(encodings[instruction.type]).map(([k, v]: [string, Encoding[string]]) => {
+    if (typeof v === "string") {
+      return [k, decode(binary, v)] as const;
     }
-  );
+    return [k, v.bits.map((b) => decode(binary, b)).join("") + "0".repeat(v.shift)] as const;
+  });
   return {
     instruction,
-    vars: Object.fromEntries(
-      vars.map(([k, v]) => [k, Object.assign(parseInt(v, 2), { length: v.length })])
-    ),
+    vars: Object.fromEntries(vars.map(([k, v]) => [k, Object.assign(parseInt(v, 2), { length: v.length })])),
   };
 }
 
@@ -108,6 +92,7 @@ export function run(strings: TemplateStringsArray | string | string[], callback?
   stdout.write("\x1b[?25l");
 
   process.stdin.on("data", (data) => {
+    if (typeof data === "string") data = Buffer.from(data);
     if (data.length === 1 && data[0] === 0x03) process.exit();
     memView.setUint32(0x00ffff, data.readUIntLE(0, Math.min(data.length, 4)), true);
   });
@@ -133,8 +118,7 @@ export function run(strings: TemplateStringsArray | string | string[], callback?
       instruction.execute({ imm, ...vars } as never);
 
       if (pc === currentPc) setPC(pc + 4);
-
-      callback?.();
+      if (callback) setImmediate(callback);
     } catch (e) {
       if (instr !== 0) {
         console.error(e, pc);

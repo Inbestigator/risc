@@ -7,16 +7,14 @@ export function dumpRanges(memory = defaultMem, view = defaultView) {
 
   for (let i = 0; i < memory.length - 4; i += 4) {
     const word = view.getUint32(i, true);
-    if (word !== 0) {
-      if (start === null) start = i;
-    } else {
+    if (word === 0) {
       if (start !== null) {
         ranges.push(`\x1b[2m[${start - lastEnd}]\x1b[0m`);
         lastEnd = i - 1;
         ranges.push(`[${start}:${i - 1}]`);
         start = null;
       }
-    }
+    } else start ??= i;
   }
 
   if (start !== null) {

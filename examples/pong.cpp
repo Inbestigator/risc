@@ -27,8 +27,6 @@ int main()
 
         uint32_t key = *input;
 
-        pos(bx, by) = BALL;
-
         for (int i = 0; i < PADDLE_HEIGHT; ++i)
         {
             pos(0, p1y + i) = PADDLE;
@@ -39,6 +37,8 @@ int main()
         {
             pos(PLAY_WIDTH / 2, i) = PADDLE;
         }
+
+        pos(bx, by) = BALL;
 
         render_frame();
 

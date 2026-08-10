@@ -2,11 +2,13 @@
   "name": "risc",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5.8.3"
+    "@biomejs/biome": "^2.5.7",
+    "@types/bun": "^1.3.14",
+    "typescript": "^7.0.2"
   },
   "private": true,
+  "scripts": {
+    "checks": "tsc --noEmit && biome check --write"
+  },
   "type": "module"
 }

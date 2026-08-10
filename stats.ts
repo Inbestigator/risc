@@ -7,12 +7,9 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
   const termWidth = process.stdout.columns || 80;
   const termHeight = process.stdout.rows || 24;
 
-  const regNames = Object.keys(registers) as (keyof typeof registers)[];
+  const regNames = Object.keys(registers);
 
-  maxRegValueWidth = Math.max(
-    maxRegValueWidth,
-    ...regNames.map((r) => registers[r]!.toString(16).length)
-  );
+  maxRegValueWidth = Math.max(maxRegValueWidth, ...regNames.map((r) => registers[r]?.toString(16).length ?? 0));
   const regWidth = 4 + 1 + maxRegValueWidth;
 
   const brailleWidth = termWidth - regWidth - 2;
@@ -23,18 +20,15 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
 
   const lines: string[] = [];
 
-  lines.push(
-    `\x1b[4mReg |${" Val ".padStart(maxRegValueWidth)}│${" Memory".padEnd(brailleWidth + 1)}\x1b[0m`
-  );
+  lines.push(`\x1b[4mReg |${" Val ".padStart(maxRegValueWidth)}│${" Memory".padEnd(brailleWidth + 1)}\x1b[0m`);
 
   for (let row = 0; row < totalRows; ++row) {
     const regName = regNames[row];
     const regText = regName
-      ? regName.padEnd(4) +
-        registers[regName]!.toString(16).padStart(maxRegValueWidth).toUpperCase()
+      ? regName.padEnd(4) + registers[regName]?.toString(16).padStart(maxRegValueWidth).toUpperCase()
       : " ".repeat(regWidth);
 
-    const memOffset = row * memoryBytesPerRow;
+    const memOffset = row * memoryBytesPerRow + 0xa00000;
 
     let memoryColumn = "";
 
@@ -48,12 +42,12 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
             byte |= 1 << b;
           }
         }
-        braille.push(String.fromCharCode(0x2800 + byte));
+        braille.push(String.fromCodePoint(0x2800 + byte));
       }
       memoryColumn = braille.join("");
     } else {
       const bytesPerHexRow = Math.floor(Math.floor(brailleWidth / 3) / 4) * 4;
-      const memAddr = 0xa00 + (row - brailleRows) * bytesPerHexRow;
+      const memAddr = 0xa00000 + (row - brailleRows) * bytesPerHexRow;
       const bytes = memory.slice(memAddr, memAddr + bytesPerHexRow);
       memoryColumn = Array.from(bytes)
         .map((b) => (b === 0 ? `\x1b[2m00\x1b[0m` : b.toString(16).padStart(2, "0").toUpperCase()))
@@ -63,5 +57,5 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
     lines.push(`${regText} │ ${memoryColumn}`);
   }
 
-  stdout.write("\x1b[H" + lines.join("\n"));
+  stdout.write(`\x1b[H${lines.join("\n")}`);
 }

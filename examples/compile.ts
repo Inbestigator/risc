@@ -1,7 +1,7 @@
-import { $ } from "bun";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { $ } from "bun";
 
 export async function compile(address: string) {
   const tmpPath = join(tmpdir(), `${address}.elf`);

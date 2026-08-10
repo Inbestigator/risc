@@ -1,13 +1,13 @@
-import { memView, pc, setPC, X, memory } from "./data";
-import type { encodings, EncodingType } from ".";
+import type { EncodingType, encodings } from ".";
 import codes from "./codes";
+import { memory, memView, pc, setPC, X } from "./data";
 
 export interface Instruction<T extends EncodingType> {
-  execute: (args: {
-    [K in keyof (typeof encodings)[T]]: K extends `x${string}`
-      ? keyof typeof X
-      : number & { length: number };
-  }) => void;
+  execute: (
+    args: {
+      [K in keyof (typeof encodings)[T]]: K extends `x${string}` ? keyof typeof X : number & { length: number };
+    },
+  ) => void;
   mnemonic: string;
   type: T;
   opcode: string;
@@ -27,10 +27,9 @@ function jumpHalfword(target_hw_addr: number) {
   jump(target_hw_addr);
 }
 
-const signed = Object.assign(
-  (v: number & { length: number }) => (v << (32 - v.length)) >> (32 - v.length),
-  { X: (x: keyof typeof X) => (X[x] << 0) >> 0 }
-);
+const signed = Object.assign((v: number & { length: number }) => (v << (32 - v.length)) >> (32 - v.length), {
+  X: (x: keyof typeof X) => (X[x] << 0) >> 0,
+});
 
 const wrapMem = (a: number) => ((a % memory.length) + memory.length) % memory.length;
 
@@ -67,8 +66,7 @@ export const is = [
   }),
   i({
     ...codes.bge,
-    execute: ({ imm, xs1, xs2 }) =>
-      signed.X(xs1) >= signed.X(xs2) && jumpHalfword(pc + signed(imm)),
+    execute: ({ imm, xs1, xs2 }) => signed.X(xs1) >= signed.X(xs2) && jumpHalfword(pc + signed(imm)),
   }),
   i({
     ...codes.bltu,
@@ -104,8 +102,7 @@ export const is = [
   }),
   i({
     ...codes.sh,
-    execute: ({ imm, xs1, xs2 }) =>
-      memView.setInt16(wrapMem(X[xs1] + signed(imm)), X[xs2] & 0xffff, true),
+    execute: ({ imm, xs1, xs2 }) => memView.setInt16(wrapMem(X[xs1] + signed(imm)), X[xs2] & 0xffff, true),
   }),
   i({
     ...codes.sw,
@@ -139,6 +136,22 @@ export const is = [
     ...codes.ecall,
     execute() {
       const sys = X[17];
+      globalThis.ecall[403] = () => {
+        const clock_id = X[10]; // a0
+        const tp = X[11]; // a1 (pointer)
+
+        const ms = (clock_id === 1 ? performance : Date).now();
+        //                           ^ monotonic   ^ realtime
+
+        const sec = Math.floor(ms / 1000);
+        const nsec = Math.floor((ms % 1000) * 1e6);
+
+        memView.setInt32(wrapMem(tp), sec, true);
+        memView.setInt32(wrapMem(tp + 4), nsec, true);
+
+        X[10] = 0;
+      };
+
       if (globalThis.ecall[sys]) globalThis.ecall[sys]();
       else if (sys === 93) {
         console.info(`Program exited with code ${X[10]}`);

@@ -1,7 +1,1 @@
-{
-  "files.associations": {
-    "*.ejs": "html",
-    "*.css": "tailwindcss",
-    "cstdint": "cpp"
-  }
-}
+{ "editor.defaultFormatter": "biomejs.biome" }
