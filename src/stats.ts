@@ -1,15 +1,14 @@
 import { stdout } from "bun";
-import { memory as defaultMem, X as defaultRegs } from "./data";
+import type Simulator from "./index.ts";
 
-let maxRegValueWidth = 5;
+export function displayStats({ memory, X }: Simulator, memStart = 0xa00000) {
+  let maxRegValueWidth = 5;
 
-export function displayStats(memory = defaultMem, registers: Record<string, number> = defaultRegs) {
   const termWidth = process.stdout.columns || 80;
   const termHeight = process.stdout.rows || 24;
+  const regNames = Object.keys(X);
 
-  const regNames = Object.keys(registers);
-
-  maxRegValueWidth = Math.max(maxRegValueWidth, ...regNames.map((r) => registers[r]?.toString(16).length ?? 0));
+  maxRegValueWidth = Math.max(maxRegValueWidth, ...regNames.map((r) => X[r]?.toString(16).length ?? 0));
   const regWidth = 4 + 1 + maxRegValueWidth;
 
   const brailleWidth = termWidth - regWidth - 2;
@@ -25,10 +24,10 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
   for (let row = 0; row < totalRows; ++row) {
     const regName = regNames[row];
     const regText = regName
-      ? regName.padEnd(4) + registers[regName]?.toString(16).padStart(maxRegValueWidth).toUpperCase()
-      : " ".repeat(regWidth);
+      ? regName.padStart(2).padEnd(4) + X[regName]?.toString(16).padStart(maxRegValueWidth).toUpperCase()
+      : " ".repeat(regWidth - 1);
 
-    const memOffset = row * memoryBytesPerRow + 0xa00000;
+    const memOffset = row * memoryBytesPerRow + memStart;
 
     let memoryColumn = "";
 
@@ -47,7 +46,7 @@ export function displayStats(memory = defaultMem, registers: Record<string, numb
       memoryColumn = braille.join("");
     } else {
       const bytesPerHexRow = Math.floor(Math.floor(brailleWidth / 3) / 4) * 4;
-      const memAddr = 0xa00000 + (row - brailleRows) * bytesPerHexRow;
+      const memAddr = memStart + (row - brailleRows) * bytesPerHexRow;
       const bytes = memory.slice(memAddr, memAddr + bytesPerHexRow);
       memoryColumn = Array.from(bytes)
         .map((b) => (b === 0 ? `\x1b[2m00\x1b[0m` : b.toString(16).padStart(2, "0").toUpperCase()))

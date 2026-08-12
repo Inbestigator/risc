@@ -1,14 +1,30 @@
 {
-  "name": "risc",
-  "module": "index.ts",
+  "name": "riss-v",
+  "version": "0.1.0",
+  "description": "A JS implementation of the RISC-V (32I) specification.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Inbestigator/risc.git"
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./32I": "./dist/32I/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "checks": "tsc --noEmit && biome check --write",
+    "dist": "rm -fr dist && tsc",
+    "dry-publish": "bun publish --dry-run"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.5.7",
     "@types/bun": "^1.3.14",
     "typescript": "^7.0.2"
-  },
-  "private": true,
-  "scripts": {
-    "checks": "tsc --noEmit && biome check --write"
-  },
-  "type": "module"
+  }
 }
