@@ -25,16 +25,14 @@ const decode = (binary: string, encoded: EncodedVar) =>
 
 export default class Simulator {
   public trace: { instruction: string; code: string }[] = [];
-  public X = new Proxy(Object.fromEntries(new Array(32).fill(0).map((v, i) => [i, v])), {
+  public X = new Proxy<Record<number, number>>(Object.fromEntries(new Array(32).fill(0).map((v, i) => [i, v])), {
     set: (o, k, v) => (Number(k) === 0 ? true : Reflect.set(o, k, v)),
   });
   public pc = 0;
   private memoryBuffer = new ArrayBuffer(0xffffff);
   public memory = new Uint8Array(this.memoryBuffer);
   public memView = new DataView(this.memoryBuffer);
-  public afterStep?: (code: 0 | 1) => void;
-  constructor(afterStep?: () => void, memoryBuffer?: ArrayBuffer) {
-    this.afterStep = afterStep;
+  constructor(memoryBuffer?: ArrayBuffer) {
     if (memoryBuffer) this.memoryBuffer = memoryBuffer;
   }
   public readonly loadVerilog = (verilog: string) => {
@@ -114,13 +112,13 @@ export default class Simulator {
       instruction.execute({ imm, ...vars } as never);
 
       if (this.pc === currentPc) this.pc += 4;
-      this.afterStep?.(0);
+      return 0;
     } catch (e) {
       if (instr !== 0) {
         console.error(e, this.pc);
         console.table(this.trace.slice(0, 10));
       }
-      this.afterStep?.(1);
+      return 1;
     }
   };
 }

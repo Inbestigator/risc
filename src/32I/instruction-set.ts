@@ -4,7 +4,7 @@ import codes from "./codes.ts";
 export interface Instruction<T extends EncodingType> {
   execute: (
     args: {
-      [K in keyof (typeof encodings)[T]]: K extends `x${string}` ? string : number & { length: number };
+      [K in keyof (typeof encodings)[T]]: K extends `x${string}` ? number : number & { length: number };
     },
   ) => void;
   mnemonic: string;

@@ -10,26 +10,25 @@ emitKeypressEvents(process.stdin);
 process.stdin.setRawMode(true);
 stdout.write("\x1b[?25l");
 
-process.stdin.on("data", (data) => {
-  if (typeof data === "string") data = Buffer.from(data);
-  if (data.length === 1 && data[0] === 0x03) process.exit();
-  sim.memView.setUint32(0x00ffff, data.readUIntLE(0, Math.min(data.length, 4)), true);
-});
+process.stdin
+  .on("data", (data) => {
+    if (typeof data === "string") data = Buffer.from(data);
+    if (data.length === 1 && data[0] === 0x03) process.exit();
+    sim.memView.setUint32(0x00ffff, data.readUIntLE(0, Math.min(data.length, 4)), true);
+  })
+  .unref();
+process.on("exit", () => stdout.write("\x1b[?25h"));
 
 globalThis.ecall = { 1000() {} };
 
 sim.loadVerilog(compiled);
-sim.afterStep = (c) => (c === 0 ? setImmediate(sim.step) : process.exit(c));
+
+let postStep: ((code: 0 | 1) => unknown) | undefined;
 
 switch (argv[2]) {
   case "stats": {
     console.clear();
-    const prevAfterStep = sim.afterStep;
-    sim.afterStep = (c) => {
-      if (c === 0) displayStats(sim);
-      prevAfterStep(c);
-    };
-    sim.step();
+    postStep = () => displayStats(sim);
     break;
   }
   case "screen": {
@@ -41,11 +40,14 @@ switch (argv[2]) {
       stdout.write("\x1b[0m");
     };
     console.clear();
-    sim.step();
     break;
   }
-  default:
-    sim.step();
 }
 
-process.on("exit", () => stdout.write("\x1b[?25h"));
+function step() {
+  const code = sim.step();
+  postStep?.(code);
+  if (!code) setImmediate(step);
+}
+
+step();

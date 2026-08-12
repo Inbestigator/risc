@@ -6,7 +6,7 @@ export function displayStats({ memory, X }: Simulator, memStart = 0xa00000) {
 
   const termWidth = process.stdout.columns || 80;
   const termHeight = process.stdout.rows || 24;
-  const regNames = Object.keys(X);
+  const regNames = Object.keys(X) as `${keyof typeof X}`[];
 
   maxRegValueWidth = Math.max(maxRegValueWidth, ...regNames.map((r) => X[r]?.toString(16).length ?? 0));
   const regWidth = 4 + 1 + maxRegValueWidth;
