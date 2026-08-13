@@ -1,4 +1,4 @@
-import Simulator from "../../src";
+import Simulator from "../../src/index.ts";
 
 export async function POST(req: Request) {
   const params = new URL(req.url).searchParams;
