@@ -1,4 +1,4 @@
-import Simulator, { displayStats } from "riss-v";
+import Simulator, { displayStats } from "../src";
 
 const sim = new Simulator();
 

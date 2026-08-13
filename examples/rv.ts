@@ -19,8 +19,6 @@ process.stdin
   .unref();
 process.on("exit", () => stdout.write("\x1b[?25h"));
 
-globalThis.ecall = { 1000() {} };
-
 sim.loadVerilog(compiled);
 
 let postStep: ((code: 0 | 1) => unknown) | undefined;

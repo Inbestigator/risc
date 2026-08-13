@@ -24,16 +24,26 @@ const decode = (binary: string, encoded: EncodedVar) =>
     : (binary[31 - Number(encoded)] as string);
 
 export default class Simulator {
-  public trace: { instruction: string; code: string }[] = [];
-  public X = new Proxy<Record<number, number>>(Object.fromEntries(new Array(32).fill(0).map((v, i) => [i, v])), {
-    set: (o, k, v) => (Number(k) === 0 ? true : Reflect.set(o, k, v)),
-  });
-  public pc = 0;
-  private memoryBuffer = new ArrayBuffer(0xffffff);
-  public memory = new Uint8Array(this.memoryBuffer);
-  public memView = new DataView(this.memoryBuffer);
-  constructor(memoryBuffer?: ArrayBuffer) {
-    if (memoryBuffer) this.memoryBuffer = memoryBuffer;
+  public trace: {
+    instruction: string;
+    imm?: number;
+    vars: Record<string, number & { length: number }>;
+    code: string;
+    pc: number;
+  }[] = [];
+  public X;
+  public pc;
+  public memory;
+  public memView;
+  constructor({
+    memory = new ArrayBuffer(0xffffff),
+    pc = 0,
+    X = Object.fromEntries(new Array(32).fill(0).map((v, i) => [i, v])) as Record<number, number>,
+  } = {}) {
+    this.X = new Proxy(X, { set: (o, k, v) => (Number(k) === 0 ? true : Reflect.set(o, k, v)) });
+    this.pc = pc;
+    this.memory = new Uint8Array(memory);
+    this.memView = new DataView(memory);
   }
   public readonly loadVerilog = (verilog: string) => {
     const lines = verilog.split(/[\r\n]/);
@@ -107,7 +117,7 @@ export default class Simulator {
         vars,
         code: instr.toString(16).padStart(8, "0"),
         pc: this.pc,
-      } as never);
+      });
 
       instruction.execute({ imm, ...vars } as never);
 

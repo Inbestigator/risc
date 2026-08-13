@@ -1,4 +1,3 @@
-import { stdout } from "bun";
 import type Simulator from "./index.ts";
 
 export function displayStats({ memory, X }: Simulator, memStart = 0xa00000) {
@@ -56,5 +55,5 @@ export function displayStats({ memory, X }: Simulator, memStart = 0xa00000) {
     lines.push(`${regText} │ ${memoryColumn}`);
   }
 
-  stdout.write(`\x1b[H${lines.join("\n")}`);
+  process.stdout.write(`\x1b[H${lines.join("\n")}`);
 }

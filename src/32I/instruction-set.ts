@@ -165,6 +165,9 @@ export default function (sim: Simulator) {
     }),
   ] as const;
 }
+
 declare global {
   var ecall: Record<number, () => void>;
 }
+
+globalThis.ecall = { 1000() {} };
